@@ -3,6 +3,7 @@ import threading
 import multiprocessing
 import os
 import time
+import re
 from pycorenlp import StanfordCoreNLP
 
 enc = "utf-8"
@@ -25,7 +26,22 @@ def process_request(conn, addr):
             size -= batch_size
             k += data.decode(enc)
         if command == "STAT":
-            pass
+            d = dict()
+            words = k.split(' ')
+            regex = re.compile('[^a-zA-Z]')
+            for word in words:
+                word = regex.sub('', word)
+                if word not in d.keys():
+                    d[word] = 0
+                d[word] += 1
+            d = [(k, d[k]) for k in sorted(d, key=d.get, reverse=True)]
+            i = 0
+            out = ''
+            for k in d:
+                if i == 10:
+                    break
+                out += k + ' '
+                i += 1
         elif command == "ENTI":
             data = ""
             k = k.split('", "')
